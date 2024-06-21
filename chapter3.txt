@@ -2,6 +2,7 @@ thats that pain
 
 
 
+
 // Variables to manage timers
 let idleTimeout;
 let sessionTimeout;
@@ -19,7 +20,7 @@ function resetIdleTimer() {
     clearTimeout(idleTimeout);
     idleTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
-        window.location.href = logoutURL;
+        logout();
     }, idleTimer);
 }
 
@@ -30,7 +31,7 @@ function startSessionTimer() {
 
     sessionTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
-        window.location.href = logoutURL;
+        logout();
     }, adjustedSessionDuration);
 
     setTimeout(function() {
@@ -71,27 +72,4 @@ function logout() {
     window.location.href = logoutURL;
 }
 
-// Check if the page was refreshed
-if (window.performance.navigation.type === 1) {
-    // Page was refreshed
-    console.log("Page was refreshed. Resuming timers...");
-    if (!sessionStarted) {
-        // If session not started, treat as a fresh session
-        lastActivity = Date.now();
-        localStorage.setItem('lastActivity', lastActivity);
-        localStorage.setItem('sessionStarted', 'true');
-    } else {
-        // If session already started, use existing lastActivity
-        lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
-    }
-} else {
-    // Initial load
-    lastActivity = Date.now();
-    localStorage.setItem('lastActivity', lastActivity);
-    localStorage.setItem('sessionStarted', 'true');
-}
-
-// Start the script
-startSessionTimer();
-resetIdleTimer();
-logRemainingTime();
+// Check if the​⬤
