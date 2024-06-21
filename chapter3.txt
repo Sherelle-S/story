@@ -13,13 +13,18 @@ const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
 // Initialize last activity from localStorage or current time
 let lastActivity = localStorage.getItem("lastActivity") ? parseInt(localStorage.getItem("lastActivity")) : Date.now();
 
+// Function to handle user logout
+function logout() {
+    console.log("Logging out due to inactivity or session timeout.");
+    window.location.href = logoutURL;
+}
+
 // Reset idle timer
 function resetIdleTimer() {
     clearTimeout(idleTimeout);
 
     idleTimeout = setTimeout(function() {
-        console.log("Logging out due to inactivity.");
-        window.location.href = logoutURL;
+        logout();
     }, idleTimer);
 
     lastActivity = Date.now();
@@ -29,20 +34,26 @@ function resetIdleTimer() {
 
 // Start session timer
 function startSessionTimer() {
-    const sessionTimeoutMs = sessionDuration - (Date.now() - lastActivity);
+    const elapsedTime = Date.now() - lastActivity;
+    const sessionTimeoutMs = sessionDuration - elapsedTime;
     const warningTimeoutMs = sessionTimeoutMs - warningDuration;
 
     clearTimeout(sessionTimeout);
     clearTimeout(warningTimeout);
 
-    sessionTimeout = setTimeout(function() {
-        console.log("Logging out due to session timeout.");
-        window.location.href = logoutURL;
-    }, sessionTimeoutMs);
+    if (sessionTimeoutMs <= 0) {
+        logout();
+    } else {
+        sessionTimeout = setTimeout(function() {
+            logout();
+        }, sessionTimeoutMs);
 
-    warningTimeout = setTimeout(function() {
-        alert("Your session will expire in 30 minutes. Please save your work.");
-    }, warningTimeoutMs);
+        if (warningTimeoutMs > 0) {
+            warningTimeout = setTimeout(function() {
+                alert("Your session will expire in 30 minutes. Please save your work.");
+            }, warningTimeoutMs);
+        }
+    }
 }
 
 // Track activity events
@@ -73,5 +84,16 @@ function startTimers() {
     logRemainingTime();
 }
 
-// Start the script
-startTimers();
+// Check if the page was just refreshed
+if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+    // Reset timers on page reload
+    const elapsedTime = Date.now() - lastActivity;
+    if (elapsedTime < idleTimer) {
+        resetIdleTimer();
+    }
+    if (elapsedTime < sessionDuration) {
+        startSessionTimer();
+    }
+} else {
+    startTimers();
+}
