@@ -1,6 +1,7 @@
 thats that pain
 
 
+
 // Variables to manage timers
 let idleTimeout;
 let sessionTimeout;
@@ -11,6 +12,7 @@ const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
 
 // Retrieve the lastActivity timestamp from localStorage
 let lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
+let sessionStarted = localStorage.getItem('sessionStarted');
 
 // Function to reset idle timer
 function resetIdleTimer() {
@@ -63,18 +65,33 @@ function logRemainingTime() {
     }, 60000); // Log every minute
 }
 
-// Check if the page was refreshed
-if (window.performance.navigation.type === 1) {
-    // Adjust timers or take any necessary action
-    console.log("Page was refreshed. Resuming timers...");
-    lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
-    startSessionTimer();
-    resetIdleTimer();
-} else {
-    // Initial load
-    startSessionTimer();
-    resetIdleTimer();
+// Clear localStorage on logout
+function logout() {
+    localStorage.clear();
+    window.location.href = logoutURL;
 }
 
-// Start logging remaining time
+// Check if the page was refreshed
+if (window.performance.navigation.type === 1) {
+    // Page was refreshed
+    console.log("Page was refreshed. Resuming timers...");
+    if (!sessionStarted) {
+        // If session not started, treat as a fresh session
+        lastActivity = Date.now();
+        localStorage.setItem('lastActivity', lastActivity);
+        localStorage.setItem('sessionStarted', 'true');
+    } else {
+        // If session already started, use existing lastActivity
+        lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
+    }
+} else {
+    // Initial load
+    lastActivity = Date.now();
+    localStorage.setItem('lastActivity', lastActivity);
+    localStorage.setItem('sessionStarted', 'true');
+}
+
+// Start the script
+startSessionTimer();
+resetIdleTimer();
 logRemainingTime();
