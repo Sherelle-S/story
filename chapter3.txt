@@ -1,6 +1,7 @@
 thats that pain
 
 
+
 // Variables to manage timers
 let idleTimeout;
 let sessionTimeout;
@@ -18,7 +19,6 @@ function resetIdleTimer() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
     }, idleTimer - (Date.now() - lastActivity));
-    lastActivity = Date.now();
     console.log("Idle timer reset.");
 }
 
@@ -49,6 +49,14 @@ function logRemainingTime() {
         console.log("Minutes until inactivity logout: " + Math.floor(idleTimeRemaining / 60000));
         console.log("Minutes until session logout: " + Math.floor(sessionRemaining / 60000));
     }, 60000); // Log every minute
+}
+
+// Check if the page was refreshed
+if (window.performance.navigation.type === 1) {
+    // Adjust timers or take any necessary action
+    // For example, you might want to cancel the sessionTimeout here
+    // and restart it after the page has fully loaded.
+    console.log("Page was refreshed. Resuming timers...");
 }
 
 // Start the script
