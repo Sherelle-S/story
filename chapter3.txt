@@ -1,7 +1,5 @@
 thats that pain
 
-
-
 // Variables to manage timers
 let idleTimeout;
 let sessionTimeout;
