@@ -8,7 +8,7 @@ const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-let lastActivity = Date.now();
+let initialTimestamp = Date.now(); // Store the initial timestamp
 
 // Reset idle timer
 function resetIdleTimer() {
@@ -17,8 +17,7 @@ function resetIdleTimer() {
     idleTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
-    }, idleTimer - (Date.now() - lastActivity)); // Adjust for elapsed time
-    lastActivity = Date.now(); // Update last activity timestamp
+    }, idleTimer - (Date.now() - initialTimestamp)); // Adjust for elapsed time
     console.log("Idle timer reset.");
 }
 
@@ -27,11 +26,11 @@ function startSessionTimer() {
     sessionTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
-    }, sessionDuration - (Date.now() - lastActivity)); // Adjust for elapsed time
+    }, sessionDuration - (Date.now() - initialTimestamp)); // Adjust for elapsed time
 
     warningTimeout = setTimeout(function() {
         alert("Your session will expire in 30 minutes. Please save your work.");
-    }, sessionDuration - warningDuration - (Date.now() - lastActivity)); // Adjust for elapsed time
+    }, sessionDuration - warningDuration - (Date.now() - initialTimestamp)); // Adjust for elapsed time
 }
 
 // Track activity events
@@ -47,7 +46,7 @@ function trackActivity() {
 function logRemainingTime() {
     setInterval(function() {
         const now = Date.now();
-        const elapsed = now - lastActivity; // Calculate elapsed time
+        const elapsed = now - initialTimestamp; // Calculate elapsed time
         const idleTimeRemaining = idleTimer - elapsed;
         const sessionRemaining = sessionDuration - elapsed;
 
