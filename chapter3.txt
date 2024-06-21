@@ -1,53 +1,36 @@
 thats that pain
 
 
-// Constants
+// Variables to manage timers
+let idleTimeout;
+let sessionTimeout;
 const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-
-// Load or initialize last activity and session expiration from localStorage
-let lastActivity = localStorage.getItem("lastActivity") ? parseInt(localStorage.getItem("lastActivity")) : Date.now();
-let sessionExpiration = localStorage.getItem("sessionExpiration") ? parseInt(localStorage.getItem("sessionExpiration")) : Date.now() + sessionDuration;
-
-// Function to handle user logout
-function logout() {
-    console.log("Logging out due to inactivity or session timeout.");
-    window.location.href = logoutURL;
-}
+let initialTimestamp = Date.now(); // Store the initial timestamp
 
 // Reset idle timer
 function resetIdleTimer() {
     clearTimeout(idleTimeout);
 
-    idleTimeout = setTimeout(logout, idleTimer);
-
-    lastActivity = Date.now();
-    localStorage.setItem("lastActivity", lastActivity);
+    idleTimeout = setTimeout(function() {
+        console.log("Logging out due to inactivity.");
+        window.location.href = logoutURL;
+    }, idleTimer);
     console.log("Idle timer reset.");
 }
 
 // Start session timer
 function startSessionTimer() {
-    const now = Date.now();
-    const sessionRemaining = sessionExpiration - now;
-    const warningTimeoutMs = sessionRemaining - warningDuration;
+    sessionTimeout = setTimeout(function() {
+        console.log("Logging out due to inactivity.");
+        window.location.href = logoutURL;
+    }, sessionDuration);
 
-    clearTimeout(sessionTimeout);
-    clearTimeout(warningTimeout);
-
-    if (sessionRemaining <= 0) {
-        logout();
-    } else {
-        sessionTimeout = setTimeout(logout, sessionRemaining);
-
-        if (warningTimeoutMs > 0) {
-            warningTimeout = setTimeout(function() {
-                alert("Your session will expire in 30 minutes. Please save your work.");
-            }, warningTimeoutMs);
-        }
-    }
+    warningTimeout = setTimeout(function() {
+        alert("Your session will expire in 30 minutes. Please save your work.");
+    }, sessionDuration - warningDuration);
 }
 
 // Track activity events
@@ -59,24 +42,21 @@ function trackActivity() {
     document.body.addEventListener("touchstart", resetIdleTimer);
 }
 
-// Log remaining time until logout every second
+// Log remaining time until logout every minute
 function logRemainingTime() {
     setInterval(function() {
         const now = Date.now();
-        const idleTimeRemaining = idleTimer - (now - lastActivity);
-        const sessionTimeRemaining = sessionExpiration - now;
+        const elapsed = now - initialTimestamp; // Calculate elapsed time
+        const idleTimeRemaining = idleTimer - elapsed;
+        const sessionRemaining = sessionDuration - elapsed;
 
-        console.log("Seconds until inactivity logout: " + Math.floor(idleTimeRemaining / 1000));
-        console.log("Seconds until session logout: " + Math.floor(sessionTimeRemaining / 1000));
-    }, 1000);
+        console.log("Minutes until inactivity logout: " + Math.floor(idleTimeRemaining / 60000));
+        console.log("Minutes until session logout: " + Math.floor(sessionRemaining / 60000));
+    }, 60000); // Log every minute
 }
 
-function startTimers() {
-    resetIdleTimer();
-    startSessionTimer();
-    trackActivity();
-    logRemainingTime();
-}
-
-// Initialize timers on page load
-startTimers();
+// Start the script
+startSessionTimer();
+resetIdleTimer();
+trackActivity();
+logRemainingTime();
