@@ -8,7 +8,7 @@ const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-let initialTimestamp = Date.now(); // Store the initial timestamp
+let lastActivity = Date.now();
 
 // Reset idle timer
 function resetIdleTimer() {
@@ -17,7 +17,8 @@ function resetIdleTimer() {
     idleTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
-    }, idleTimer - (Date.now() - initialTimestamp)); // Adjust for elapsed time
+    }, idleTimer - (Date.now() - lastActivity));
+    lastActivity = Date.now();
     console.log("Idle timer reset.");
 }
 
@@ -26,27 +27,22 @@ function startSessionTimer() {
     sessionTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
-    }, sessionDuration - (Date.now() - initialTimestamp)); // Adjust for elapsed time
+    }, sessionDuration - (Date.now() - lastActivity));
 
     warningTimeout = setTimeout(function() {
         alert("Your session will expire in 30 minutes. Please save your work.");
-    }, sessionDuration - warningDuration - (Date.now() - initialTimestamp)); // Adjust for elapsed time
+    }, sessionDuration - warningDuration - (Date.now() - lastActivity));
 }
 
 // Track activity events
-function trackActivity() {
-    document.body.addEventListener("mousemove", resetIdleTimer);
-    document.body.addEventListener("keydown", resetIdleTimer);
-    document.body.addEventListener("click", resetIdleTimer);
-    document.body.addEventListener("scroll", resetIdleTimer);
-    document.body.addEventListener("touchstart", resetIdleTimer);
-}
+document.body.addEventListener("mousemove", resetIdleTimer);
+document.body.addEventListener("keydown", resetIdleTimer);
 
 // Log remaining time until logout every minute
 function logRemainingTime() {
     setInterval(function() {
         const now = Date.now();
-        const elapsed = now - initialTimestamp; // Calculate elapsed time
+        const elapsed = now - lastActivity;
         const idleTimeRemaining = idleTimer - elapsed;
         const sessionRemaining = sessionDuration - elapsed;
 
@@ -55,16 +51,7 @@ function logRemainingTime() {
     }, 60000); // Log every minute
 }
 
-// Check if the page was refreshed
-if (window.performance.navigation.type === 1) {
-    // Adjust timers or take any necessary action
-    // For example, you might want to cancel the sessionTimeout here
-    // and restart it after the page has fully loaded.
-    console.log("Page was refreshed. Resuming timers...");
-}
-
 // Start the script
 startSessionTimer();
 resetIdleTimer();
-trackActivity();
 logRemainingTime();
