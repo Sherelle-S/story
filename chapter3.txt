@@ -1,17 +1,15 @@
 thats that pain
 
 
-// Variables to manage timers
-let idleTimeout;
-let sessionTimeout;
-let warningTimeout;
+// Constants
 const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
 
-// Initialize last activity from localStorage or current time
+// Load or initialize last activity and session expiration from localStorage
 let lastActivity = localStorage.getItem("lastActivity") ? parseInt(localStorage.getItem("lastActivity")) : Date.now();
+let sessionExpiration = localStorage.getItem("sessionExpiration") ? parseInt(localStorage.getItem("sessionExpiration")) : Date.now() + sessionDuration;
 
 // Function to handle user logout
 function logout() {
@@ -23,9 +21,7 @@ function logout() {
 function resetIdleTimer() {
     clearTimeout(idleTimeout);
 
-    idleTimeout = setTimeout(function() {
-        logout();
-    }, idleTimer);
+    idleTimeout = setTimeout(logout, idleTimer);
 
     lastActivity = Date.now();
     localStorage.setItem("lastActivity", lastActivity);
@@ -34,19 +30,17 @@ function resetIdleTimer() {
 
 // Start session timer
 function startSessionTimer() {
-    const elapsedTime = Date.now() - lastActivity;
-    const sessionTimeoutMs = sessionDuration - elapsedTime;
-    const warningTimeoutMs = sessionTimeoutMs - warningDuration;
+    const now = Date.now();
+    const sessionRemaining = sessionExpiration - now;
+    const warningTimeoutMs = sessionRemaining - warningDuration;
 
     clearTimeout(sessionTimeout);
     clearTimeout(warningTimeout);
 
-    if (sessionTimeoutMs <= 0) {
+    if (sessionRemaining <= 0) {
         logout();
     } else {
-        sessionTimeout = setTimeout(function() {
-            logout();
-        }, sessionTimeoutMs);
+        sessionTimeout = setTimeout(logout, sessionRemaining);
 
         if (warningTimeoutMs > 0) {
             warningTimeout = setTimeout(function() {
@@ -70,7 +64,7 @@ function logRemainingTime() {
     setInterval(function() {
         const now = Date.now();
         const idleTimeRemaining = idleTimer - (now - lastActivity);
-        const sessionTimeRemaining = sessionDuration - (now - lastActivity);
+        const sessionTimeRemaining = sessionExpiration - now;
 
         console.log("Seconds until inactivity logout: " + Math.floor(idleTimeRemaining / 1000));
         console.log("Seconds until session logout: " + Math.floor(sessionTimeRemaining / 1000));
@@ -84,16 +78,5 @@ function startTimers() {
     logRemainingTime();
 }
 
-// Check if the page was just refreshed
-if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
-    // Reset timers on page reload
-    const elapsedTime = Date.now() - lastActivity;
-    if (elapsedTime < idleTimer) {
-        resetIdleTimer();
-    }
-    if (elapsedTime < sessionDuration) {
-        startSessionTimer();
-    }
-} else {
-    startTimers();
-}
+// Initialize timers on page load
+startTimers();
