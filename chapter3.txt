@@ -9,241 +9,63 @@ const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-const lastActivityKey = 'lastActivity';
-const sessionStartKey = 'sessionStart';
+
+// Initialize last activity from localStorage or current time
+let lastActivity = localStorage.getItem("lastActivity") ? parseInt(localStorage.getItem("lastActivity")) : Date.now();
 
 // Reset idle timer
 function resetIdleTimer() {
     clearTimeout(idleTimeout);
-    const currentTime = Date.now();
-    localStorage.setItem(lastActivityKey, currentTime.toString());
-
-    idleTimeout = setTimeout(function() {
-        console.log("Logging out due to inactivity. Line: idleTimeout");
-        // window.location.href = logoutURL;
-    }, idleTimer);
-
-    console.log("Idle timer reset.");
-}
-
-// Start session timer
-function startSessionTimer() {
-    let sessionStart = localStorage.getItem(sessionStartKey);
-    if (!sessionStart) {
-        sessionStart = Date.now().toString();
-        localStorage.setItem(sessionStartKey, sessionStart);
-    }
-    const sessionElapsed = Date.now() - parseInt(sessionStart, 10);
-    const remainingSessionTime = sessionDuration - sessionElapsed;
-
-    console.log("Initial remaining session time:", remainingSessionTime); // Debug log
-
-    if (remainingSessionTime <= 0) {
-        console.log("Logging out due to session expiration. Line: startSessionTimer check");
-        // window.location.href = logoutURL;
-    } else {
-        sessionTimeout = setTimeout(function() {
-            console.log("Logging out due to session expiration. Line: sessionTimeout");
-            // window.location.href = logoutURL;
-        }, remainingSessionTime);
-
-        if (remainingSessionTime > warningDuration) {
-            warningTimeout = setTimeout(function() {
-                alert("Your session will expire in 30 minutes.");
-            }, remainingSessionTime - warningDuration);
-        } else {
-            alert("Your session will expire in less than 30 minutes.");
-        }
-    }
-}
-
-// Track activity events
-function trackActivity() {
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    document.addEventListener("mousemove", resetIdleTimer);
-    document.addEventListener("keydown", resetIdleTimer);
-    document.addEventListener("click", resetIdleTimer);
-    document.addEventListener("scroll", resetIdleTimer);
-    document.addEventListener("touchstart", resetIdleTimer);
-}
-
-// Handle visibility change to pause/resume timers
-function handleVisibilityChange() {
-    if (document.visibilityState === 'visible') {
-        resetIdleTimer();
-        clearTimeout(sessionTimeout);
-        clearTimeout(warningTimeout);
-        startSessionTimer();
-    }
-}
-
-// Log remaining time until logout
-function logRemainingTime() {
-    function logTime() {
-        const now = Date.now();
-        const lastActivity = parseInt(localStorage.getItem(lastActivityKey), 10) || now;
-        const sessionStart = parseInt(localStorage.getItem(sessionStartKey), 10) || now;
-        let inactivityRemaining = idleTimer - (now - lastActivity);
-        const sessionElapsed = now - sessionStart;
-        let sessionRemaining = sessionDuration - sessionElapsed;
-
-        if (inactivityRemaining < 0) {
-            inactivityRemaining = 0;
-        }
-        if (sessionRemaining < 0) {
-            sessionRemaining = 0;
-        }
-
-        console.log("Seconds until inactivity logout: " + Math.floor(inactivityRemaining / 1000));
-        console.log("Seconds until session logout: " + Math.floor(sessionRemaining / 1000));
-
-        requestAnimationFrame(logTime);
-    }
-    requestAnimationFrame(logTime);
-}
-
-// Initialize all timers and event listeners
-function init() {
-    const now = Date.now();
-
-    // Initialize session start time if not present
-    if (!localStorage.getItem(sessionStartKey)) {
-        localStorage.setItem(sessionStartKey, now.toString());
-    }
-
-    // Initialize last activity time if not present
-    if (!localStorage.getItem(lastActivityKey)) {
-        localStorage.setItem(lastActivityKey, now.toString());
-    }
-
-    // Calculate remaining inactivity time and set idle timeout
-    const lastActivity = parseInt(localStorage.getItem(lastActivityKey), 10);
-    const inactivityRemaining = idleTimer - (now - lastActivity);
-    if (inactivityRemaining > 0) {
-        idleTimeout = setTimeout(function() {
-            console.log("Logging out due to inactivity. Line: init inactivityRemaining check");
-            // window.location.href = logoutURL;
-        }, inactivityRemaining);
-    } else {
-        console.log("Inactivity time exceeded, resetting timer. Line: init inactivity exceeded");
-        resetIdleTimer();
-    }
-
-    startSessionTimer();
-    trackActivity();
-    logRemainingTime();
-}
-
-// Start the script
-init();
-
-
-
-also with cookies
-
-// Helper functions to manage cookies
-function setCookie(name, value, expires) {
-    let expiresString = "";
-    if (expires) {
-        const date = new Date();
-        date.setTime(date.getTime() + expires);
-        expiresString = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expiresString + "; path=/";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for(let i=0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-function eraseCookie(name) {   
-    document.cookie = name + '=; Max-Age=-99999999;';  
-}
-
-// Variables to manage timers
-let idleTimeout;
-let sessionTimeout;
-let warningTimeout;
-const logoutURL = "logout.aspx";
-const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
-const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
-const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-
-// Reset idle timer
-function resetIdleTimer() {
-    clearTimeout(idleTimeout);
-    setCookie('lastActivity', Date.now());
 
     idleTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
     }, idleTimer);
 
+    lastActivity = Date.now();
+    localStorage.setItem("lastActivity", lastActivity);
     console.log("Idle timer reset.");
 }
 
 // Start session timer
 function startSessionTimer() {
-    const sessionStart = getCookie('sessionStart') || Date.now();
-    setCookie('sessionStart', sessionStart);
-
-    const sessionTimeElapsed = Date.now() - sessionStart;
-    const sessionTimeoutMs = sessionDuration - sessionTimeElapsed;
+    const sessionTimeoutMs = sessionDuration - (Date.now() - lastActivity);
     const warningTimeoutMs = sessionTimeoutMs - warningDuration;
 
-    if (sessionTimeoutMs > 0) {
-        sessionTimeout = setTimeout(function() {
-            console.log("Logging out due to session timeout.");
-            window.location.href = logoutURL;
-        }, sessionTimeoutMs);
-    }
+    clearTimeout(sessionTimeout);
+    clearTimeout(warningTimeout);
 
-    if (warningTimeoutMs > 0) {
-        warningTimeout = setTimeout(function() {
-            alert("Your session will expire in 30 minutes. Please save your work.");
-        }, warningTimeoutMs);
-    }
+    sessionTimeout = setTimeout(function() {
+        console.log("Logging out due to session timeout.");
+        window.location.href = logoutURL;
+    }, sessionTimeoutMs);
+
+    warningTimeout = setTimeout(function() {
+        alert("Your session will expire in 30 minutes. Please save your work.");
+    }, warningTimeoutMs);
 }
 
 // Track activity events
 function trackActivity() {
-    const resetEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    resetEvents.forEach(event => {
-        document.body.addEventListener(event, resetIdleTimer);
-    });
+    document.body.addEventListener("mousemove", resetIdleTimer);
+    document.body.addEventListener("keydown", resetIdleTimer);
+    document.body.addEventListener("click", resetIdleTimer);
+    document.body.addEventListener("scroll", resetIdleTimer);
+    document.body.addEventListener("touchstart", resetIdleTimer);
 }
 
 // Log remaining time until logout every second
 function logRemainingTime() {
-    function logTime() {
+    setInterval(function() {
         const now = Date.now();
-        const lastActivity = getCookie('lastActivity') || now;
-        const sessionStart = getCookie('sessionStart') || now;
         const idleTimeRemaining = idleTimer - (now - lastActivity);
-        const sessionTimeElapsed = now - sessionStart;
-        const sessionRemaining = sessionDuration - sessionTimeElapsed;
+        const sessionTimeRemaining = sessionDuration - (now - lastActivity);
 
         console.log("Seconds until inactivity logout: " + Math.floor(idleTimeRemaining / 1000));
-        console.log("Seconds until session logout: " + Math.floor(sessionRemaining / 1000));
-
-        requestAnimationFrame(logTime);
-    }
-    requestAnimationFrame(logTime);
+        console.log("Seconds until session logout: " + Math.floor(sessionTimeRemaining / 1000));
+    }, 1000);
 }
 
-// Handle beforeunload to perform any cleanup
-window.addEventListener('beforeunload', () => {
-    setCookie('lastActivity', Date.now());
-});
-
-// Initialize timers
 function startTimers() {
     resetIdleTimer();
     startSessionTimer();
@@ -252,4 +74,4 @@ function startTimers() {
 }
 
 // Start the script
-document.addEventListener('DOMContentLoaded', startTimers);
+startTimers();
