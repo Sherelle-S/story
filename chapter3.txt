@@ -1,5 +1,6 @@
 thats that pain
 
+
 // Variables to manage timers
 let idleTimeout;
 let sessionTimeout;
@@ -20,29 +21,30 @@ function resetIdleTimer() {
 
 // Function to start session timer
 function startSessionTimer() {
+    const elapsed = Date.now() - lastActivity;
+    const adjustedSessionDuration = sessionDuration - elapsed;
+
     sessionTimeout = setTimeout(function() {
         console.log("Logging out due to inactivity.");
         window.location.href = logoutURL;
-    }, sessionDuration);
+    }, adjustedSessionDuration);
 
     warningTimeout = setTimeout(function() {
         alert("Your session will expire in 30 minutes. Please save your work.");
-    }, sessionDuration - warningDuration);
+    }, adjustedSessionDuration - warningDuration);
 }
 
-// Function to track activity events
-function trackActivity() {
-    document.body.addEventListener("mousemove", function() {
-        clearTimeout(idleTimeout);
-        lastActivity = Date.now();
-        resetIdleTimer();
-    });
-    document.body.addEventListener("keydown", function() {
-        clearTimeout(idleTimeout);
-        lastActivity = Date.now();
-        resetIdleTimer();
-    });
-}
+// Track activity events
+document.body.addEventListener("mousemove", function() {
+    clearTimeout(idleTimeout);
+    lastActivity = Date.now();
+    resetIdleTimer();
+});
+document.body.addEventListener("keydown", function() {
+    clearTimeout(idleTimeout);
+    lastActivity = Date.now();
+    resetIdleTimer();
+});
 
 // Log remaining time until logout every minute
 function logRemainingTime() {
@@ -68,5 +70,4 @@ if (window.performance.navigation.type === 1) {
 // Start the script
 startSessionTimer();
 resetIdleTimer();
-trackActivity();
 logRemainingTime();
