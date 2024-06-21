@@ -8,7 +8,9 @@ const logoutURL = "logout.aspx";
 const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
 const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 const idleTimer = 60 * 60 * 1000; // 60 minutes in milliseconds
-let lastActivity = Date.now();
+
+// Retrieve the lastActivity timestamp from localStorage
+let lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
 
 // Function to reset idle timer
 function resetIdleTimer() {
@@ -29,7 +31,7 @@ function startSessionTimer() {
         window.location.href = logoutURL;
     }, adjustedSessionDuration);
 
-    warningTimeout = setTimeout(function() {
+    setTimeout(function() {
         alert("Your session will expire in 30 minutes. Please save your work.");
     }, adjustedSessionDuration - warningDuration);
 }
@@ -38,11 +40,13 @@ function startSessionTimer() {
 document.body.addEventListener("mousemove", function() {
     clearTimeout(idleTimeout);
     lastActivity = Date.now();
+    localStorage.setItem('lastActivity', lastActivity); // Save to localStorage
     resetIdleTimer();
 });
 document.body.addEventListener("keydown", function() {
     clearTimeout(idleTimeout);
     lastActivity = Date.now();
+    localStorage.setItem('lastActivity', lastActivity); // Save to localStorage
     resetIdleTimer();
 });
 
@@ -62,12 +66,15 @@ function logRemainingTime() {
 // Check if the page was refreshed
 if (window.performance.navigation.type === 1) {
     // Adjust timers or take any necessary action
-    // For example, you might want to cancel the sessionTimeout here
-    // and restart it after the page has fully loaded.
     console.log("Page was refreshed. Resuming timers...");
+    lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
+    startSessionTimer();
+    resetIdleTimer();
+} else {
+    // Initial load
+    startSessionTimer();
+    resetIdleTimer();
 }
 
-// Start the script
-startSessionTimer();
-resetIdleTimer();
+// Start logging remaining time
 logRemainingTime();
