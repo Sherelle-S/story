@@ -72,4 +72,27 @@ function logout() {
     window.location.href = logoutURL;
 }
 
-// Check if the​⬤
+// Check if the page was refreshed
+if (window.performance.navigation.type === 1) {
+    // Page was refreshed
+    console.log("Page was refreshed. Resuming timers...");
+    if (!sessionStarted) {
+        // If session not started, treat as a fresh session
+        lastActivity = Date.now();
+        localStorage.setItem('lastActivity', lastActivity);
+        localStorage.setItem('sessionStarted', 'true');
+    } else {
+        // If session already started, use existing lastActivity
+        lastActivity = parseInt(localStorage.getItem('lastActivity')) || Date.now();
+    }
+} else {
+    // Initial load
+    lastActivity = Date.now();
+    localStorage.setItem('lastActivity', lastActivity);
+    localStorage.setItem('sessionStarted', 'true');
+}
+
+// Start the script
+startSessionTimer();
+resetIdleTimer();
+logRemainingTime();
