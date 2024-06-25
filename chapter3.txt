@@ -1,3 +1,79 @@
+// Constants to manage durations
+const logoutURL = "logout.aspx";
+const sessionDuration = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
+const warningDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+const inactivityDuration = 60 * 60 * 1000; // 60 minutes in milliseconds
+
+// Variables to manage timers
+let inactivityTimeout;
+let sessionTimeout;
+let warningTimeout;
+let lastActivity = Date.now();
+const sessionStart = Date.now();
+
+// Reset inactivity timer
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(function() {
+        console.log("Logging out due to inactivity.");
+        window.location.href = logoutURL;
+    }, inactivityDuration);
+
+    lastActivity = Date.now();
+    console.log("Inactivity timer reset.");
+}
+
+// Start session timer
+function startSessionTimer() {
+    sessionTimeout = setTimeout(function() {
+        console.log("Logging out due to session expiration.");
+        window.location.href = logoutURL;
+    }, sessionDuration);
+
+    warningTimeout = setTimeout(function() {
+        alert("Your session will expire in 30 minutes.");
+    }, sessionDuration - warningDuration);
+}
+
+// Track activity events
+function trackActivity() {
+    document.body.addEventListener("mousemove", resetInactivityTimer);
+    document.body.addEventListener("keydown", resetInactivityTimer);
+    document.body.addEventListener("click", resetInactivityTimer);
+    document.body.addEventListener("scroll", resetInactivityTimer);
+    document.body.addEventListener("touchstart", resetInactivityTimer);
+}
+
+// Log remaining time until logout every second
+function logRemainingTime() {
+    setInterval(function() {
+        const now = Date.now();
+        let inactivityRemaining = inactivityDuration - (now - lastActivity);
+        let sessionRemaining = sessionDuration - (now - sessionStart);
+
+        if (inactivityRemaining < 0) {
+            inactivityRemaining = 0;
+        }
+        if (sessionRemaining < 0) {
+            sessionRemaining = 0;
+        }
+
+        console.log("Seconds until inactivity logout: " + Math.floor(inactivityRemaining / 1000));
+        console.log("Seconds until session logout: " + Math.floor(sessionRemaining / 1000));
+    }, 1000);
+}
+
+// Initialize all timers and event listeners
+function init() {
+    resetInactivityTimer();
+    startSessionTimer();
+    trackActivity();
+    logRemainingTime();
+}
+
+// Start the script
+init();
+
 thats that pain
 
 
